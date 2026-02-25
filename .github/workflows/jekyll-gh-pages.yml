@@ -1,0 +1,765 @@
+# Sample workflow for building and deploying a Jekyll site to GitHub Pages
+name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>The Atlas — Eissa & Serena</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --eissa:#e8976c;--serena:#7cb5c4;--gold:#c4a87c;--green:#82c8a0;--cream:#f0e6d3;
+  --arg-blue:#75AADB;--arg-white:#f0f0f0;--bg:#030810;--panel-bg:rgba(6,12,24,0.94);
+  --ease:cubic-bezier(0.4,0,0.2,1);--snap:cubic-bezier(0.16,1,0.3,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Outfit',sans-serif;color:#fff}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.04);border-radius:4px}
+
+/* ══ GATE — Fileteado Porteño ══ */
+#GATE{position:fixed;inset:0;z-index:9999;background:linear-gradient(170deg,#0a1628 0%,#0d1a30 40%,#081020 100%);display:flex;align-items:center;justify-content:center;transition:opacity 0.8s ease,transform 0.8s ease}
+#GATE.gone{opacity:0;transform:scale(1.05);pointer-events:none}
+.gate-card{width:min(460px,90vw);text-align:center;position:relative;padding:60px 48px 52px;background:rgba(117,170,219,0.03);border:1px solid rgba(117,170,219,0.08);border-radius:32px;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 80px rgba(117,170,219,0.04);backdrop-filter:blur(20px)}
+.gate-card::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,#75AADB,#f0f0f0,#75AADB,transparent)}
+.gate-card::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,#75AADB,#f0f0f0,#75AADB,transparent)}
+.gate-filete{position:absolute;inset:-20px;border:1px solid rgba(117,170,219,0.04);border-radius:40px;pointer-events:none}
+.gate-filete::before,.gate-filete::after{content:'✦';position:absolute;color:rgba(117,170,219,0.15);font-size:14px}
+.gate-filete::before{top:-8px;left:50%;transform:translateX(-50%)}
+.gate-filete::after{bottom:-8px;left:50%;transform:translateX(-50%)}
+.gate-sun{font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 30px rgba(255,200,50,0.2));animation:float 3s ease-in-out infinite}
+.gate-title{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:#fff;letter-spacing:2px;margin-bottom:4px}
+.gate-sub{font-size:11px;color:rgba(117,170,219,0.6);letter-spacing:6px;text-transform:uppercase;font-weight:300;margin-bottom:8px}
+.gate-divider{width:80px;height:1px;background:linear-gradient(90deg,transparent,rgba(117,170,219,0.3),transparent);margin:20px auto}
+.gate-phrase{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;color:rgba(255,255,255,0.35);font-style:italic;margin-bottom:32px;line-height:1.6;letter-spacing:0.3px}
+.gate-phrase em{color:rgba(117,170,219,0.5);font-style:normal}
+.gate-input-wrap{position:relative;margin-bottom:20px}
+.gate-input{width:100%;padding:18px 24px;border-radius:16px;border:1.5px solid rgba(117,170,219,0.12);background:rgba(117,170,219,0.04);color:#fff;font-size:20px;font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:8px;text-align:center;transition:all .4s var(--ease);text-transform:uppercase}
+.gate-input:focus{outline:none;border-color:rgba(117,170,219,0.35);box-shadow:0 0 0 6px rgba(117,170,219,0.06),0 0 40px rgba(117,170,219,0.06);background:rgba(117,170,219,0.06)}
+.gate-input::placeholder{color:rgba(117,170,219,0.2);font-weight:300;letter-spacing:4px;font-size:14px;text-transform:none}
+.gate-btn{width:100%;padding:16px;border-radius:16px;border:1.5px solid rgba(117,170,219,0.15);background:linear-gradient(135deg,rgba(117,170,219,0.08),rgba(117,170,219,0.04));color:rgba(255,255,255,0.5);font-size:12px;font-family:'Outfit',sans-serif;font-weight:500;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .4s var(--ease);position:relative;overflow:hidden}
+.gate-btn:hover{border-color:rgba(117,170,219,0.3);background:linear-gradient(135deg,rgba(117,170,219,0.15),rgba(117,170,219,0.08));color:#fff;transform:translateY(-2px);box-shadow:0 8px 30px rgba(117,170,219,0.12)}
+.gate-btn:active{transform:translateY(0)}
+.gate-mate{position:absolute;top:20px;right:28px;font-size:28px;opacity:0.3;animation:float 4s ease-in-out infinite;animation-delay:1s}
+.gate-err{font-size:11px;color:rgba(255,100,100,0.7);margin-top:14px;min-height:16px;letter-spacing:1px;font-weight:300;transition:opacity .3s}
+.gate-footer{margin-top:28px;display:flex;align-items:center;justify-content:center;gap:12px;color:rgba(117,170,219,0.2);font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:300}
+.gate-footer img{width:22px;height:15px;border-radius:2px;opacity:0.3}
+@keyframes gateShake{0%,100%{transform:translateX(0)}15%,45%,75%{transform:translateX(-6px)}30%,60%,90%{transform:translateX(6px)}}
+
+.arg-grad{background:linear-gradient(90deg,#ff6b6b,#ffa94d,#ffd43b,#69db7c,#4dabf7,#9775fa,#f06595);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;background-size:200% 100%;animation:rainbowShift 4s ease infinite}
+.ser-grad{background:linear-gradient(90deg,#f06595,#9775fa,#4dabf7,#69db7c,#ffd43b,#ffa94d,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;background-size:200% 100%;animation:rainbowShift 4s ease infinite}
+@keyframes rainbowShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.arg-flag{width:18px;height:12px;border-radius:2px;object-fit:cover;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,0.3);flex-shrink:0}
+
+@keyframes slideIn{from{transform:translateX(100%);opacity:.4}to{transform:translateX(0);opacity:1}}
+@keyframes fadeUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes gradBorder{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-14px) scale(1.03)}}
+@keyframes loadBar{0%{transform:translateX(-150%)}100%{transform:translateX(500%)}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes entIn{from{transform:translateY(14px) translateX(-3px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+#LS{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;position:absolute;inset:0;z-index:999;background:var(--bg);transition:opacity 0.8s ease}
+#LS.h{opacity:0;pointer-events:none}
+#LS .gi{font-size:72px;margin-bottom:32px;animation:float 2.8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(60,140,200,0.25))}
+#LS h2{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;letter-spacing:6px}
+#LS .tr{width:140px;height:1px;background:rgba(255,255,255,0.12);border-radius:1px;margin-top:28px;overflow:hidden}
+#LS .fi{width:30%;height:100%;background:linear-gradient(90deg,transparent,var(--eissa),transparent);animation:loadBar 2s ease-in-out infinite}
+
+#CV{display:block;cursor:grab;touch-action:none;position:absolute;inset:0}#CV:active{cursor:grabbing}
+
+/* Sync indicator */
+#sync{position:fixed;bottom:28px;right:28px;z-index:30;display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);font-weight:300;pointer-events:none}
+#sync .dot{width:6px;height:6px;border-radius:50%;background:rgba(80,180,120,0.4);transition:background 0.3s}
+#sync.live .dot{background:rgba(80,220,120,0.8);animation:pulse 2s ease infinite}
+#sync.off .dot{background:rgba(200,60,60,0.4)}
+
+#HD{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:22px 32px;background:linear-gradient(180deg,rgba(3,8,16,0.98) 0%,rgba(3,8,16,0.45) 82%,transparent 100%);pointer-events:none}
+#HD .L,#HD .R{pointer-events:auto}
+#HD .L{display:flex;align-items:center;gap:18px}
+.lo{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#55c085,#1a6540);box-shadow:0 0 36px rgba(60,180,120,0.15),inset 0 -3px 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:15px;color:rgba(255,255,255,0.85);font-weight:700}
+.lt{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#fff;letter-spacing:3px}
+.ls{font-size:8.5px;color:rgba(255,255,255,0.5);letter-spacing:6px;text-transform:uppercase;font-weight:300;margin-top:3px}
+#HD .R{display:flex;gap:6px}
+.sc{text-align:center;padding:10px 8px;border-radius:12px;transition:background .3s;min-width:52px;cursor:default}.sc:hover{background:rgba(255,255,255,0.02)}
+.sc .v{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;line-height:1}
+.sc .l{font-size:7px;color:rgba(255,255,255,0.45);letter-spacing:2.5px;text-transform:uppercase;margin-top:6px;white-space:nowrap;font-weight:400;display:flex;align-items:center;justify-content:center;gap:3px}
+
+#TT{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(6px);z-index:50;background:rgba(6,12,24,0.92);backdrop-filter:blur(30px) saturate(1.3);border:1px solid rgba(255,255,255,0.05);border-radius:22px;padding:18px 36px;box-shadow:0 28px 80px rgba(0,0,0,0.6);text-align:center;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s}
+#TT.vi{opacity:1;transform:translateX(-50%) translateY(0)}
+#TT .tn{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;letter-spacing:.5px;color:#fff}
+#TT .tc{font-size:11px;color:rgba(255,255,255,0.55);font-weight:300;margin-top:4px;letter-spacing:.8px}
+
+#IN{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:20;color:rgba(255,255,255,0.25);font-size:9px;letter-spacing:4px;text-transform:uppercase;pointer-events:none;font-weight:300;transition:opacity .4s}
+
+#OV{position:fixed;inset:0;z-index:100;display:none;justify-content:flex-end}
+#OV.op{display:flex}
+#OV .bk{position:absolute;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(12px);opacity:0;transition:opacity .4s}
+#OV.vi .bk{opacity:1}
+#PN{position:relative;width:min(520px,94vw);height:100vh;background:var(--panel-bg);backdrop-filter:blur(40px) saturate(1.2);border-left:1px solid rgba(255,255,255,0.03);overflow-y:auto;overflow-x:hidden;box-shadow:-40px 0 120px rgba(0,0,0,0.7);display:flex;flex-direction:column;transform:translateX(100%);opacity:.4;transition:transform .5s var(--snap),opacity .5s var(--snap)}
+#OV.vi #PN{transform:translateX(0);opacity:1}
+#OV.cl #PN{transform:translateX(100%);opacity:0;transition:transform .4s var(--ease),opacity .4s var(--ease)}
+.pg{position:absolute;top:0;left:0;right:0;height:300px;background:linear-gradient(180deg,rgba(232,151,108,0.015) 0%,rgba(124,181,196,0.006) 40%,transparent 100%);pointer-events:none;border-radius:0 0 50% 50%}
+.pb{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--arg-blue),var(--arg-white),var(--serena),var(--gold),transparent);background-size:200% 100%;animation:gradBorder 5s ease infinite}
+.dv{padding:0 36px}.dl{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04) 15%,rgba(255,255,255,0.04) 85%,transparent)}
+
+.ph{padding:40px 36px 26px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;animation:fadeUp .4s ease}
+.pc{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:300;color:#fff;line-height:1;letter-spacing:-1px}
+.pm{display:flex;gap:24px;margin-top:14px;align-items:center}
+.pm .n{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:20px}.pm .la{font-size:11px;color:rgba(255,255,255,0.45);font-weight:200;letter-spacing:.5px;margin-left:6px}.pm .sp{width:1px;height:14px;background:rgba(255,255,255,0.04)}
+.cx{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.035);border-radius:50%;width:44px;height:44px;cursor:pointer;color:rgba(255,255,255,0.45);font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .4s var(--ease);flex-shrink:0}.cx:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);transform:rotate(90deg)}
+
+.mr{padding:0 36px 22px;display:flex;gap:12px;animation:fadeUp .5s ease}
+.mb{flex:1;padding:15px;border-radius:16px;cursor:pointer;transition:all .35s var(--ease);font-family:'Outfit',sans-serif;font-size:13px;letter-spacing:.4px;background:rgba(255,255,255,0.005);border:1.5px solid rgba(255,255,255,0.025);color:rgba(255,255,255,0.4);font-weight:300;text-align:center}.mb:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.25)}.mb.a{font-weight:600}
+
+.fs{padding:26px 36px;animation:fadeUp .55s ease}
+.fl{font-size:8px;letter-spacing:7px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:22px;font-weight:500}
+.pr{display:flex;gap:12px;margin-bottom:18px}
+.ps{flex:1;padding:15px 14px;border-radius:16px;cursor:pointer;transition:all .35s var(--ease);font-family:'Outfit',sans-serif;font-size:14px;letter-spacing:.3px;background:rgba(255,255,255,0.006);border:1.5px solid rgba(255,255,255,0.025);color:rgba(255,255,255,0.45);font-weight:300;text-align:center;display:flex;align-items:center;justify-content:center;gap:7px}.ps:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.35)}.ps.a{font-weight:600}
+
+.if{width:100%;padding:15px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.035);background:rgba(255,255,255,0.015);color:#fff;font-size:14px;font-family:'Outfit',sans-serif;font-weight:300;transition:all .35s var(--ease);letter-spacing:.2px;margin-bottom:14px}.if:focus{outline:none;border-color:rgba(200,170,130,0.2);box-shadow:0 0 0 5px rgba(200,170,130,0.025);background:rgba(255,255,255,0.025)}.if::placeholder{color:rgba(255,255,255,0.35);font-weight:200}.if:hover{border-color:rgba(255,255,255,0.06)}
+.tf{width:100%;padding:15px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.035);background:rgba(255,255,255,0.015);color:#fff;font-size:13px;font-family:'Outfit',sans-serif;font-weight:300;transition:all .35s var(--ease);resize:none;line-height:1.7;margin-bottom:20px}.tf:focus{outline:none;border-color:rgba(200,170,130,0.2);box-shadow:0 0 0 5px rgba(200,170,130,0.025);background:rgba(255,255,255,0.025)}.tf::placeholder{color:rgba(255,255,255,0.35);font-weight:200}.tf:hover{border-color:rgba(255,255,255,0.06)}
+
+.ab{width:100%;padding:16px;border-radius:16px;border:none;font-size:13px;font-weight:600;font-family:'Outfit',sans-serif;letter-spacing:1.5px;transition:all .35s var(--ease);cursor:not-allowed;position:relative;overflow:hidden;text-transform:uppercase;background:rgba(255,255,255,0.015);color:rgba(255,255,255,0.15)}.ab.en{cursor:pointer}.ab.en:hover{transform:translateY(-2px)}.ab.en:active{transform:translateY(0)}.ab.en::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.05) 50%,transparent 60%);animation:shimmer 3.5s ease-in-out infinite}
+
+.tr2{padding:20px 36px 12px;display:flex;gap:6px}
+.tp{padding:9px 20px;border-radius:28px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:.8px;transition:all .3s var(--ease);background:transparent;color:rgba(255,255,255,0.4);font-weight:300;display:inline-flex;align-items:center;gap:5px}.tp:hover{background:rgba(255,255,255,0.035);transform:translateY(-1px)}.tp.a{font-weight:600}
+
+.en2{padding:8px 36px 44px;flex:1}
+.es{text-align:center;padding:60px 24px;color:rgba(255,255,255,0.25)}.es .ic{font-size:56px;margin-bottom:22px;opacity:.35}.es h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:rgba(255,255,255,0.5);margin-bottom:10px;letter-spacing:1px}.es p{font-size:12px;font-weight:200;line-height:1.7}
+.el{display:flex;flex-direction:column;gap:10px}
+.ec{padding:18px 22px;border-radius:18px;border:1px solid rgba(255,255,255,0.025);background:rgba(255,255,255,0.008);transition:all .35s var(--ease);position:relative;animation:entIn .4s ease both;border-left:3px solid transparent}.ec:hover{background:rgba(255,255,255,0.025);transform:translateX(5px);border-color:rgba(255,255,255,0.05);box-shadow:0 4px 24px rgba(0,0,0,0.2)}
+.ec .en3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;letter-spacing:.2px;color:#fff}
+.ec .eb{font-size:9px;padding:4px 13px;border-radius:24px;font-weight:600;letter-spacing:.8px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.ec .eno{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.8;font-weight:200;margin-top:10px}
+.db{background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,0.12);font-size:22px;padding:6px 10px;border-radius:12px;transition:all .3s;line-height:1;flex-shrink:0}.db:hover{background:rgba(255,50,50,0.05);color:rgba(255,100,100,0.5)}
+
+/* ══ GATE — LA PUERTA ARGENTINA ══ */
+#GATE{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity 1s ease,transform 1s ease}
+#GATE.gone{opacity:0;transform:scale(1.1);pointer-events:none}
+/* Massive flag stripes background */
+#GATE::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#75AADB 0%,#75AADB 33.3%,#FFFFFF 33.3%,#FFFFFF 66.6%,#75AADB 66.6%,#75AADB 100%)}
+#GATE::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 30%,rgba(0,0,0,0.3) 100%)}
+/* Confetti canvas */
+#CONFETTI{position:absolute;inset:0;z-index:1;pointer-events:none}
+/* Firework canvas */
+#FIREWORKS{position:absolute;inset:0;z-index:2;pointer-events:none}
+
+.gate-card{position:relative;z-index:10;width:min(480px,92vw);text-align:center;padding:44px 44px 38px;background:rgba(255,255,255,0.12);border:3px solid rgba(255,255,255,0.5);border-radius:28px;backdrop-filter:blur(30px);box-shadow:0 0 60px rgba(117,170,219,0.3),0 0 120px rgba(117,170,219,0.15),0 30px 80px rgba(0,0,0,0.3),inset 0 0 60px rgba(255,255,255,0.05)}
+/* Top filete — thick ornate stripe */
+.gate-filete{position:absolute;top:-3px;left:-3px;right:-3px;height:10px;border-radius:28px 28px 0 0;background:repeating-linear-gradient(90deg,#75AADB 0px,#75AADB 12px,#FFD700 12px,#FFD700 16px,#fff 16px,#fff 28px,#FFD700 28px,#FFD700 32px);box-shadow:0 2px 12px rgba(255,215,0,0.3)}
+/* Bottom filete */
+.gate-filete-bottom{position:absolute;bottom:-3px;left:-3px;right:-3px;height:10px;border-radius:0 0 28px 28px;background:repeating-linear-gradient(90deg,#75AADB 0px,#75AADB 12px,#FFD700 12px,#FFD700 16px,#fff 16px,#fff 28px,#FFD700 28px,#FFD700 32px);box-shadow:0 -2px 12px rgba(255,215,0,0.3)}
+
+/* Side decorative borders */
+.gate-card::before,.gate-card::after{content:'';position:absolute;top:10px;bottom:10px;width:4px;background:repeating-linear-gradient(180deg,#FFD700 0px,#FFD700 8px,transparent 8px,transparent 16px)}
+.gate-card::before{left:-3px;border-radius:4px 0 0 4px}
+.gate-card::after{right:-3px;border-radius:0 4px 4px 0}
+
+/* Sol de Mayo — spinning golden sun */
+.gate-sol{font-size:90px;margin-bottom:4px;filter:drop-shadow(0 0 40px rgba(255,215,0,0.6)) drop-shadow(0 0 80px rgba(255,215,0,0.3));animation:solSpin 20s linear infinite,solPulse 2s ease-in-out infinite alternate;line-height:1}
+@keyframes solSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes solPulse{from{filter:drop-shadow(0 0 40px rgba(255,215,0,0.6)) drop-shadow(0 0 80px rgba(255,215,0,0.3))}to{filter:drop-shadow(0 0 60px rgba(255,215,0,0.9)) drop-shadow(0 0 120px rgba(255,215,0,0.5))}}
+
+.gate-flags{display:flex;justify-content:center;gap:10px;margin-bottom:14px}
+.gate-flags img{width:36px;height:24px;border-radius:3px;box-shadow:0 2px 8px rgba(0,0,0,0.3);animation:flagWave 1.5s ease-in-out infinite alternate}
+.gate-flags img:nth-child(2){animation-delay:0.15s}
+.gate-flags img:nth-child(3){animation-delay:0.3s}
+.gate-flags img:nth-child(4){animation-delay:0.45s}
+.gate-flags img:nth-child(5){animation-delay:0.6s}
+@keyframes flagWave{0%{transform:rotate(-3deg) scale(1)}100%{transform:rotate(3deg) scale(1.05)}}
+
+.gate-mate-row{font-size:48px;margin-bottom:16px;letter-spacing:12px}
+
+.gate-title{font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:700;color:#1a3a5c;letter-spacing:4px;text-shadow:0 2px 0 rgba(255,255,255,0.8),0 4px 20px rgba(117,170,219,0.3);line-height:1}
+.gate-title-sub{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#75AADB;letter-spacing:8px;text-transform:uppercase;margin-top:6px;text-shadow:0 1px 0 rgba(255,255,255,0.5)}
+
+.gate-divider{width:120px;height:3px;background:linear-gradient(90deg,transparent,#FFD700,#fff,#FFD700,transparent);margin:22px auto;border-radius:2px;box-shadow:0 0 12px rgba(255,215,0,0.3)}
+
+.gate-input-wrap{position:relative;margin-bottom:16px}
+.gate-input{width:100%;padding:20px 24px;border-radius:18px;border:3px solid rgba(117,170,219,0.4);background:rgba(255,255,255,0.85);color:#1a3a5c;font-size:18px;font-family:'Outfit',sans-serif;font-weight:600;text-align:center;letter-spacing:4px;transition:all 0.4s ease;outline:none;box-shadow:inset 0 2px 8px rgba(0,0,0,0.08)}
+.gate-input::placeholder{color:rgba(26,58,92,0.35);letter-spacing:1.5px;font-size:13px;font-weight:400}
+.gate-input:focus{border-color:#FFD700;box-shadow:0 0 0 6px rgba(255,215,0,0.15),0 0 40px rgba(255,215,0,0.1),inset 0 2px 8px rgba(0,0,0,0.05);background:#fff}
+
+.gate-btn{width:100%;padding:19px;border:none;border-radius:18px;background:linear-gradient(135deg,#FFD700 0%,#FFA500 40%,#FF8C00 100%);color:#1a3a5c;font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all 0.35s ease;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(255,165,0,0.4),0 0 40px rgba(255,215,0,0.15)}
+.gate-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 40px rgba(255,165,0,0.5),0 0 60px rgba(255,215,0,0.25)}
+.gate-btn:active{transform:translateY(0) scale(0.98)}
+.gate-btn::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 30%,rgba(255,255,255,0.35) 50%,transparent 70%);animation:shimmer 2s ease-in-out infinite}
+
+.gate-err{font-size:13px;color:#cc3333;font-weight:600;margin-top:14px;min-height:20px;letter-spacing:0.5px;transition:opacity 0.3s;text-shadow:0 1px 0 rgba(255,255,255,0.5)}
+
+.gate-footer{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px}
+.gate-footer span{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:rgba(26,58,92,0.4);font-weight:700}
+.gate-footer img{width:24px;height:16px;border-radius:2px;opacity:0.6}
+
+/* Floating emojis */
+.gate-float{position:absolute;z-index:5;font-size:28px;pointer-events:none;animation:floatUp 4s ease-in infinite;opacity:0}
+@keyframes floatUp{0%{transform:translateY(0) rotate(0deg);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-100vh) rotate(360deg);opacity:0}}
+
+@keyframes gateShake{0%,100%{transform:translateX(0)}15%,45%,75%{transform:translateX(-8px)}30%,60%,90%{transform:translateX(8px)}}
+
+@media(max-width:640px){#HD{padding:14px 16px;flex-wrap:wrap;gap:10px}.lt{font-size:20px}.sc .v{font-size:20px}.pc{font-size:32px}#PN{width:100vw}.fs,.en2,.tr2,.mr,.ph,.dv{padding-left:24px;padding-right:24px}.gate-card{padding:32px 24px 28px}.gate-title{font-size:38px;letter-spacing:2px}.gate-sol{font-size:64px}.gate-mate-row{font-size:36px}.gate-flags img{width:28px;height:18px}}
+</style>
+</head>
+<body>
+
+<div id="GATE">
+  <canvas id="FIREWORKS"></canvas>
+  <canvas id="CONFETTI"></canvas>
+  <!-- Floating Argentine emojis -->
+  <div class="gate-card">
+    <div class="gate-filete"></div>
+    <div class="gate-filete-bottom"></div>
+    <div class="gate-sol">☀️</div>
+    <div class="gate-flags">
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+    </div>
+    <div class="gate-title">The Atlas</div>
+    <div class="gate-title-sub">🧉 Vamos Carajo 🧉</div>
+    <div class="gate-divider"></div>
+    <div class="gate-mate-row">⚽🥩🧉🇦🇷🎵</div>
+    <div class="gate-input-wrap">
+      <input class="gate-input" id="GPIN" type="password" placeholder="Ingresá el código, boludo" maxlength="20" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="gate-btn" id="GBTN">🇦🇷 Entrar al Atlas 🇦🇷</button>
+    <div class="gate-err" id="GERR"></div>
+    <div class="gate-footer">
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+      <span>Dale que va</span>
+      <img src="https://flagcdn.com/w40/ar.png" alt="">
+    </div>
+  </div>
+</div>
+
+<div id="LS" style="display:none"><div class="gi">🌍</div><h2>The Atlas</h2><div class="tr"><div class="fi"></div></div></div>
+
+<div id="HD"><div class="L"><div class="lo">◉</div><div><div class="lt">The Atlas</div><div class="ls">Eissa & Serena's Encounters</div></div></div><div class="R" id="SR"></div></div>
+
+<canvas id="CV"></canvas>
+
+<div id="TT"><div class="tn" id="TN"></div><div class="tc" id="TC"></div></div>
+<div id="IN">Drag to rotate · Scroll to zoom · Click any country</div>
+<div id="sync"><div class="dot"></div><span id="sync-label">local</span></div>
+
+<div id="OV"><div class="bk" id="BK"></div><div id="PN"><div class="pg"></div><div class="pb"></div>
+<div class="ph"><div><div class="pc" id="PC"></div><div class="pm"><div><span class="n" id="MP" style="color:#fff"></span><span class="la">people</span></div><div class="sp"></div><div><span class="n" id="ML" style="color:#fff"></span><span class="la">places</span></div></div></div><button class="cx" id="CB">✕</button></div>
+<div class="mr" id="MR"></div><div class="dv"><div class="dl"></div></div>
+<div class="fs" id="FS"></div><div class="dv"><div class="dl"></div></div>
+<div class="tr2" id="TR"></div><div class="en2" id="EC"></div>
+</div></div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  SUPABASE CONFIG — paste your project credentials here      ║
+// ╚══════════════════════════════════════════════════════════════╝
+const SUPABASE_URL  = "";   // e.g. "https://abcxyz.supabase.co"
+const SUPABASE_KEY  = "";   // your anon/public key
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  GATE CODE — change this to whatever you and Serena want    ║
+// ╚══════════════════════════════════════════════════════════════╝
+const GATE_CODE = "mate";  // Change this to your secret code
+
+// Table schema needed in Supabase:
+// CREATE TABLE atlas_entries (
+//   id TEXT PRIMARY KEY,
+//   type TEXT NOT NULL,        -- 'people' or 'places'
+//   country TEXT NOT NULL,
+//   who TEXT NOT NULL,          -- 'eissa' or 'serena'
+//   name TEXT NOT NULL,
+//   note TEXT DEFAULT '',
+//   ts BIGINT NOT NULL,
+//   created_at TIMESTAMPTZ DEFAULT now()
+// );
+// Then enable Realtime on the atlas_entries table in Supabase dashboard.
+
+const GEO="https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
+const FA="https://flagcdn.com/w40/ar.png";
+const mk=(n,fn)=>Array.from({length:n},fn);
+const $=id=>document.getElementById(id);
+
+// ═══════════════════ SUPABASE SYNC ═══════════════════
+let sb=null, realtimeSub=null, usingSupa=false;
+
+function initSupabase(){
+  if(!SUPABASE_URL||!SUPABASE_KEY)return false;
+  try{
+    sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    return true;
+  }catch(e){console.warn("Supabase init failed:",e);return false;}
+}
+
+async function loadFromSupabase(){
+  if(!sb)return false;
+  try{
+    const{data,error}=await sb.from("atlas_entries").select("*");
+    if(error)throw error;
+    records={people:{},places:{}};
+    (data||[]).forEach(r=>{
+      if(!records[r.type])records[r.type]={};
+      if(!records[r.type][r.country])records[r.type][r.country]=[];
+      records[r.type][r.country].push({id:r.id,who:r.who,name:r.name,note:r.note||"",ts:r.ts});
+    });
+    return true;
+  }catch(e){console.warn("Supabase load failed:",e);return false;}
+}
+
+async function insertToSupabase(type,country,entry){
+  if(!sb)return;
+  try{await sb.from("atlas_entries").insert({id:entry.id,type,country,who:entry.who,name:entry.name,note:entry.note,ts:entry.ts});}catch(e){console.warn("Insert failed:",e);}
+}
+
+async function deleteFromSupabase(id){
+  if(!sb)return;
+  try{await sb.from("atlas_entries").delete().eq("id",id);}catch(e){console.warn("Delete failed:",e);}
+}
+
+function subscribeRealtime(){
+  if(!sb)return;
+  realtimeSub=sb.channel("atlas-live")
+    .on("postgres_changes",{event:"*",schema:"public",table:"atlas_entries"},payload=>{
+      const ev=payload.eventType;
+      if(ev==="INSERT"){
+        const r=payload.new;
+        if(!records[r.type])records[r.type]={};
+        if(!records[r.type][r.country])records[r.type][r.country]=[];
+        const exists=records[r.type][r.country].some(e=>e.id===r.id);
+        if(!exists){records[r.type][r.country].push({id:r.id,who:r.who,name:r.name,note:r.note||"",ts:r.ts});rS();if(selCountry===r.country)rP();}
+      }else if(ev==="DELETE"){
+        const old=payload.old;
+        Object.keys(records).forEach(type=>{Object.keys(records[type]).forEach(country=>{records[type][country]=records[type][country].filter(e=>e.id!==old.id);if(!records[type][country].length)delete records[type][country];});});
+        rS();if(selCountry)rP();
+      }
+    }).subscribe(status=>{
+      const el=$("sync"),lb=$("sync-label");
+      if(status==="SUBSCRIBED"){el.className="live";lb.textContent="live sync";}
+      else{el.className="off";lb.textContent="reconnecting";}
+    });
+}
+
+// ═══════════════════ LOCAL STORAGE FALLBACK ═══════════════════
+async function loadLocal(){
+  try{const r=await window.storage?.get("the-atlas-v2");if(r?.value){records=JSON.parse(r.value);return;}}catch(e){}
+  try{const l=localStorage.getItem("the-atlas-v2");if(l)records=JSON.parse(l);}catch(e){}
+}
+async function saveLocal(){
+  try{await window.storage?.set("the-atlas-v2",JSON.stringify(records));}catch(e){}
+  try{localStorage.setItem("the-atlas-v2",JSON.stringify(records));}catch(e){}
+}
+
+// ═══════════════════ DATA ═══════════════════
+let worldData=null,records={people:{},places:{}};
+let selCountry=null,hovered=null,panelMode="people",activeTab="all",newEntry={who:"",name:"",note:""};
+let rot=[0,-20,0],scale=1,autoRotate=true,drag=null,resumeT=null,dims={w:960,h:700};
+const canvas=$("CV"),proj=d3.geoOrthographic().clipAngle(90).precision(0.3);
+
+// ═══════════════════ PROCEDURAL WORLD ═══════════════════
+function starCol(temp){if(temp<3800)return"255,185,125";if(temp<5000)return"255,225,185";if(temp<6500)return"255,248,240";if(temp<8500)return"215,228,255";return"175,205,255";}
+
+const STARS=mk(650,()=>{const mag=Math.random();return{x:Math.random(),y:Math.random(),r:mag<0.04?Math.random()*1.6+0.9:mag<0.25?Math.random()*0.8+0.3:Math.random()*0.35+0.08,a:Math.random()*0.5+0.2,sp:Math.random()*0.008+0.001,off:Math.random()*Math.PI*2,temp:Math.random()<0.08?3200+Math.random()*2000:Math.random()<0.15?8500+Math.random()*3500:5200+Math.random()*2000}});
+const MILKYWAY=mk(900,()=>{const a=Math.random()*Math.PI*2,spread=(Math.random()-0.5)*0.16;return{a,r:0.44+Math.sin(a*2.3)*0.06+spread,b:Math.random()*0.022+0.004,s:Math.random()*0.5+0.1}});
+const DUST=mk(180,()=>({x:Math.random(),y:Math.random(),r:Math.random()*0.4+0.06,a:Math.random()*0.04+0.005,dx:(Math.random()-0.5)*0.000015,dy:(Math.random()-0.5)*0.000015}));
+const SHOOTING=mk(4,()=>({active:false,x:0,y:0,vx:0,vy:0,life:0,maxLife:0,trail:[]}));
+const LIGHTS=mk(260,()=>({lon:Math.random()*360-180,lat:Math.random()*130-65,b:Math.random()*0.5+0.3,r:Math.random()*1.3+0.3,fl:Math.random()*0.012+0.002,off:Math.random()*Math.PI*2}));
+const CLOUDS=mk(38,()=>{const clon=Math.random()*360-180,clat=(Math.random()-0.5)*110;return{lon:clon,lat:clat,puffs:mk(Math.floor(Math.random()*7)+3,()=>({dlon:(Math.random()-0.5)*12,dlat:(Math.random()-0.5)*5,r:Math.random()*0.025+0.01,op:Math.random()*0.055+0.02})),speed:(Math.random()-0.5)*0.007};});
+
+const L1=["#3a7d48","#438a52","#3c7242","#4e8c50","#478248","#528a4c","#3f7a44","#4a8650","#447e4a","#4d8850"];
+const L2=["#6d945a","#7a9c60","#859e5c","#768c54","#8a9a58","#7d9456","#929c5a","#6a8a52","#80965c","#748e50"];
+const L3=["#9a9060","#a89868","#b5a070","#8e8558","#a49262","#98885c","#aa9a68","#8c8254","#a09060","#b0a06a"];
+const L4=["#888878","#7a7a6c","#929282","#6e6e60","#848474","#7c7c6e","#8a8a7a","#767668","#828272","#6c6c5e"];
+const PAL=[L1,L2,L3,L4];
+function lc(n){let h=0;for(let i=0;i<(n||"").length;i++)h=((h<<5)-h+n.charCodeAt(i))|0;const a=Math.abs(h);return PAL[a%4][(a>>4)%10]}
+
+// ═══════════════════ STATS / UI ═══════════════════
+function cS(){let e=0,s=0,c=new Set(),pl=0;Object.entries(records.people||{}).forEach(([k,a])=>{if(a.length)c.add(k);a.forEach(x=>{x.who==="eissa"?e++:s++;});});Object.entries(records.places||{}).forEach(([k,a])=>{if(a.length)c.add(k);pl+=a.length;});return{eissa:e,serena:s,countries:c.size,places:pl,total:e+s}}
+function rS(){const s=cS();$("SR").innerHTML=[{l:"Countries",v:s.countries},{l:"People",v:s.total},{l:`<img src="${FA}" class="arg-flag" alt=""> <span class="arg-grad">Eissa</span>`,v:s.eissa,g:"arg-grad"},{l:'<span class="ser-grad">Serena</span>',v:s.serena,g:"ser-grad"},{l:"Places",v:s.places}].map(d=>`<div class="sc"><div class="v" style="color:#fff">${d.g?`<span class="${d.g}">${d.v}</span>`:d.v}</div><div class="l">${d.l}</div></div>`).join("")}
+
+function resize(){const b=document.body;dims={w:b.clientWidth,h:b.clientHeight};const dpr=devicePixelRatio||1;canvas.width=dims.w*dpr;canvas.height=dims.h*dpr;canvas.style.width=dims.w+"px";canvas.style.height=dims.h+"px";}
+addEventListener("resize",resize);
+
+function ht(mx,my){if(!worldData)return null;const c=proj.invert([mx,my]);if(!c||isNaN(c[0]))return null;for(const f of worldData.features)if(d3.geoContains(f,c))return f.properties?.name||null;return null}
+
+canvas.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,rot:[...rot],moved:false};autoRotate=false;});
+canvas.addEventListener("pointermove",e=>{if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)>2||Math.abs(dy)>2)drag.moved=true;rot=[drag.rot[0]+dx*0.3,Math.max(-85,Math.min(85,drag.rot[1]-dy*0.3)),0];}const name=ht(e.clientX,e.clientY);if(name!==hovered){hovered=name;if(name&&!selCountry){$("TN").textContent=name;const cnt=((records.people?.[name]||[]).length+(records.places?.[name]||[]).length);$("TC").textContent=cnt>0?`${cnt} ${cnt===1?"entry":"entries"} logged`:"Click to start logging";$("TT").classList.add("vi");}else $("TT").classList.remove("vi");}});
+canvas.addEventListener("pointerup",e=>{if(drag&&!drag.moved){const name=ht(e.clientX,e.clientY);if(name)oP(name);}drag=null;clearTimeout(resumeT);resumeT=setTimeout(()=>{autoRotate=true;},4000);});
+canvas.addEventListener("pointerleave",()=>{drag=null;hovered=null;$("TT").classList.remove("vi");});
+canvas.addEventListener("wheel",e=>{e.preventDefault();scale=Math.max(0.6,Math.min(6,scale*(e.deltaY>0?0.93:1.07)));},{passive:false});
+
+// ═══════════════════ PANEL ═══════════════════
+function oP(name){selCountry=name;newEntry={who:"",name:"",note:""};panelMode="people";activeTab="all";$("IN").style.opacity="0";$("TT").classList.remove("vi");$("OV").classList.add("op");$("OV").classList.remove("cl");requestAnimationFrame(()=>$("OV").classList.add("vi"));rP();}
+function cP(){$("OV").classList.add("cl");$("OV").classList.remove("vi");setTimeout(()=>{$("OV").classList.remove("op","cl");selCountry=null;$("IN").style.opacity="1";},400);}
+$("BK").onclick=cP;$("CB").onclick=cP;
+
+function rP(){if(!selCountry)return;$("PC").textContent=selCountry;$("MP").textContent=(records.people?.[selCountry]||[]).length;$("ML").textContent=(records.places?.[selCountry]||[]).length;rM();rF();rT();rE();}
+function rM(){$("MR").innerHTML=[{id:"people",l:"People Met",i:"🤝"},{id:"places",l:"Places Visited",i:"📍"}].map(m=>{const a=panelMode===m.id;return`<button class="mb ${a?"a":""}" data-m="${m.id}" style="border-color:${a?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.025)"};background:${a?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.005)"};color:${a?"#fff":"rgba(255,255,255,0.4)"}">${m.i} ${m.l}</button>`}).join("");document.querySelectorAll(".mb").forEach(b=>b.onclick=()=>{panelMode=b.dataset.m;activeTab="all";newEntry={who:"",name:"",note:""};rP();});}
+
+function rF(){const isP=panelMode==="people",eA=newEntry.who==="eissa",sA=newEntry.who==="serena";
+$("FS").innerHTML=`<div class="fl">${isP?"New Encounter":"New Place"}</div><div class="pr"><button class="ps ${eA?"a":""}" data-w="eissa" style="border-color:${eA?"rgba(255,255,255,0.3)":"rgba(255,255,255,0.025)"};background:${eA?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.006)"};color:${eA?"#fff":"rgba(255,255,255,0.45)"}"><img src="${FA}" class="arg-flag" alt=""> <span class="arg-grad">Eissa</span></button><button class="ps ${sA?"a":""}" data-w="serena" style="border-color:${sA?"rgba(255,255,255,0.3)":"rgba(255,255,255,0.025)"};background:${sA?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.006)"};color:${sA?"#fff":"rgba(255,255,255,0.45)"}"><span class="ser-grad">Serena</span></button></div><input class="if" id="EN" value="${esc(newEntry.name)}" placeholder="${isP?"Who did you meet?":"Where did you go?"}"><textarea class="tf" id="NO" rows="2" placeholder="${isP?"Story, context, how you met...":"Memories, highlights, what you loved..."}">${esc(newEntry.note)}</textarea><button class="ab ${newEntry.who&&newEntry.name?"en":""}" id="AB" style="${newEntry.who&&newEntry.name?"background:linear-gradient(135deg,#e8976c,#d4823a,#c87030);color:#080e18;box-shadow:0 6px 28px rgba(232,151,108,0.3)":""}">+ ${isP?"Log Person":"Log Place"}</button>`;
+document.querySelectorAll(".ps").forEach(b=>b.onclick=()=>{newEntry.who=b.dataset.w;rF();});
+const ni=$("EN"),no=$("NO");ni.oninput=()=>{newEntry.name=ni.value;const ab=$("AB");if(newEntry.who&&newEntry.name){ab.classList.add("en");ab.style.cssText="background:linear-gradient(135deg,#e8976c,#d4823a,#c87030);color:#080e18;box-shadow:0 6px 28px rgba(232,151,108,0.3)";}else{ab.classList.remove("en");ab.style.cssText="";}};no.oninput=()=>{newEntry.note=no.value;};ni.onkeydown=e=>{if(e.key==="Enter")aE();};$("AB").onclick=aE;requestAnimationFrame(()=>ni.focus());}
+
+async function aE(){if(!newEntry.who||!newEntry.name||!selCountry)return;const t=panelMode==="people"?"people":"places";if(!records[t])records[t]={};if(!records[t][selCountry])records[t][selCountry]=[];const entry={...newEntry,id:Date.now()+"_"+Math.random().toString(36).slice(2,6),ts:Date.now()};records[t][selCountry].push(entry);
+if(usingSupa)await insertToSupabase(t,selCountry,entry);else await saveLocal();
+rS();newEntry={who:"",name:"",note:""};rP();}
+
+async function dE(type,country,id){if(!records[type]?.[country])return;records[type][country]=records[type][country].filter(e=>e.id!==id);if(!records[type][country].length)delete records[type][country];
+if(usingSupa)await deleteFromSupabase(id);else await saveLocal();
+rS();rP();}
+
+function rT(){$("TR").innerHTML=[{id:"all",l:"All"},{id:"eissa",l:`<img src="${FA}" class="arg-flag" alt=""> <span class="arg-grad">Eissa</span>`},{id:"serena",l:'<span class="ser-grad">Serena</span>'}].map(t=>{const a=activeTab===t.id;return`<button class="tp ${a?"a":""}" data-t="${t.id}" style="background:${a?"rgba(255,255,255,0.06)":"transparent"};color:${a?"#fff":"rgba(255,255,255,0.4)"}">${t.l}</button>`}).join("");document.querySelectorAll(".tp").forEach(b=>b.onclick=()=>{activeTab=b.dataset.t;rT();rE();});}
+
+function rE(){const type=panelMode==="people"?"people":"places";const src=records[type]?.[selCountry]||[];let entries=activeTab==="all"?src:src.filter(e=>e.who===activeTab);entries=[...entries].sort((a,b)=>b.ts-a.ts);const c=$("EC");
+if(!entries.length){c.innerHTML=`<div class="es"><div class="ic">${panelMode==="people"?"🤝":"🗺️"}</div><h3>${panelMode==="people"?"No people logged yet":"No places logged yet"}</h3><p>${panelMode==="people"?`Record someone you met from ${selCountry}`:`Add a place you visited in ${selCountry}`}</p></div>`;return;}
+c.innerHTML=`<div class="el">${entries.map((e,i)=>{const isE=e.who==="eissa";return`<div class="ec" style="border-left-color:${isE?"rgba(255,150,150,0.15)":"rgba(150,150,255,0.15)"};animation-delay:${i*0.05}s"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:12px;margin-bottom:${e.note?"10":"0"}px;flex-wrap:wrap"><span class="en3">${esc(e.name)}</span><span class="eb" style="background:rgba(255,255,255,0.04);color:#fff;border:1px solid rgba(255,255,255,0.06)">${isE?`<img src="${FA}" class="arg-flag" alt=""> <span class="arg-grad">Eissa</span>`:'<span class="ser-grad">Serena</span>'}</span></div>${e.note?`<div class="eno">${esc(e.note)}</div>`:""}</div><button class="db" data-t="${type}" data-id="${e.id}">×</button></div></div>`}).join("")}</div>`;
+c.querySelectorAll(".db").forEach(b=>b.onclick=()=>dE(b.dataset.t,selCountry,b.dataset.id));}
+function esc(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+// ═══════════════════════════════════════════════════════════════
+//                        RENDER LOOP
+// ═══════════════════════════════════════════════════════════════
+function startR(){
+const dpr=devicePixelRatio||1;
+// Pre-bake grain texture
+const grainC=document.createElement("canvas");grainC.width=256;grainC.height=256;
+const gx=grainC.getContext("2d"),gid=gx.createImageData(256,256);
+for(let i=0;i<gid.data.length;i+=4){const v=Math.random()*255;gid.data[i]=gid.data[i+1]=gid.data[i+2]=v;gid.data[i+3]=5;}
+gx.putImageData(gid,0,0);
+
+let frame=0;
+(function render(now){
+requestAnimationFrame(render);frame++;
+const{w,h}=dims,ctx=canvas.getContext("2d");
+ctx.setTransform(dpr,0,0,dpr,0,0);
+const bR=Math.min(w,h)*0.4,radius=bR*scale,cx=w/2,cy=h/2;
+proj.scale(radius).translate([cx,cy]).rotate(rot);
+if(autoRotate&&!drag)rot=[rot[0]+0.038,rot[1],0];
+const path=d3.geoPath(proj,ctx),t=now*0.001;
+
+// ── DEEP SPACE ──
+const bg=ctx.createRadialGradient(cx*0.55,cy*0.3,0,cx,cy,Math.max(w,h));
+bg.addColorStop(0,"#0a1020");bg.addColorStop(0.25,"#070c18");bg.addColorStop(0.55,"#040812");bg.addColorStop(1,"#020406");
+ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+
+// ── Nebulae ──
+[[0.12,0.2,0.3,"30,50,100"],[0.82,0.72,0.22,"50,22,70"],[0.45,0.88,0.18,"22,45,60"],[0.88,0.12,0.13,"40,18,55"]].forEach(([nx,ny,nr,rgb])=>{const ng=ctx.createRadialGradient(w*nx,h*ny,0,w*nx,h*ny,w*nr);ng.addColorStop(0,`rgba(${rgb},0.025)`);ng.addColorStop(0.5,`rgba(${rgb},0.008)`);ng.addColorStop(1,"transparent");ctx.fillStyle=ng;ctx.fillRect(0,0,w,h);});
+
+// ── Milky Way band ──
+const mwA=0.38;
+ctx.save();
+MILKYWAY.forEach(p=>{const px=cx+Math.cos(p.a+mwA)*w*p.r;const py=cy*0.45+Math.sin(p.a+mwA)*h*0.14+h*0.27;ctx.globalAlpha=p.b;ctx.fillStyle="rgba(210,215,235,0.5)";ctx.beginPath();ctx.arc(px,py,p.s,0,Math.PI*2);ctx.fill();});
+ctx.globalAlpha=1;ctx.restore();
+
+// ── Dust ──
+DUST.forEach(d=>{d.x+=d.dx;d.y+=d.dy;if(d.x<0||d.x>1)d.dx*=-1;if(d.y<0||d.y>1)d.dy*=-1;ctx.globalAlpha=d.a;ctx.fillStyle="rgba(180,200,240,0.5)";ctx.beginPath();ctx.arc(d.x*w,d.y*h,d.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
+
+// ── Stars with temperature colors ──
+STARS.forEach(s=>{const tw=s.a+Math.sin(t*s.sp*60+s.off)*0.25;ctx.globalAlpha=Math.max(0.02,Math.min(1,tw));const col=starCol(s.temp);ctx.fillStyle=`rgba(${col},0.9)`;ctx.beginPath();ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);ctx.fill();if(s.r>1.05&&tw>0.5){ctx.globalAlpha=tw*0.18;ctx.strokeStyle=`rgba(${col},0.6)`;ctx.lineWidth=0.3;const sx=s.x*w,sy=s.y*h,l=s.r*3.5;ctx.beginPath();ctx.moveTo(sx-l,sy);ctx.lineTo(sx+l,sy);ctx.stroke();ctx.beginPath();ctx.moveTo(sx,sy-l);ctx.lineTo(sx,sy+l);ctx.stroke();}});ctx.globalAlpha=1;
+
+// ── Shooting stars ──
+SHOOTING.forEach(ss=>{if(!ss.active&&Math.random()<0.0006){ss.active=true;ss.x=Math.random()*w*0.8+w*0.1;ss.y=Math.random()*h*0.4;const a=Math.PI*0.12+Math.random()*0.35,sp=3.5+Math.random()*4.5;ss.vx=Math.cos(a)*sp;ss.vy=Math.sin(a)*sp;ss.life=0;ss.maxLife=25+Math.random()*45;ss.trail=[];}if(ss.active){ss.trail.push([ss.x,ss.y]);if(ss.trail.length>15)ss.trail.shift();ss.x+=ss.vx;ss.y+=ss.vy;ss.life++;if(ss.life>ss.maxLife){ss.active=false;ss.trail=[];return;}const al=1-ss.life/ss.maxLife;for(let i=1;i<ss.trail.length;i++){ctx.globalAlpha=(i/ss.trail.length)*al*0.5;ctx.strokeStyle="#dce4ff";ctx.lineWidth=1.5*(i/ss.trail.length);ctx.beginPath();ctx.moveTo(ss.trail[i-1][0],ss.trail[i-1][1]);ctx.lineTo(ss.trail[i][0],ss.trail[i][1]);ctx.stroke();}ctx.globalAlpha=al*0.85;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(ss.x,ss.y,1.3,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}});
+
+// ── Atmosphere halos ──
+for(let i=5;i>=1;i--){const ag=ctx.createRadialGradient(cx,cy,radius*(0.92+i*0.012),cx,cy,radius*(1+i*0.075));ag.addColorStop(0,`rgba(55,135,255,${0.04/i})`);ag.addColorStop(0.5,`rgba(35,95,220,${0.02/i})`);ag.addColorStop(1,"transparent");ctx.beginPath();ctx.arc(cx,cy,radius*(1+i*0.075),0,Math.PI*2);ctx.fillStyle=ag;ctx.fill();}
+// Sunward scatter
+const sa=ctx.createRadialGradient(cx-radius*0.65,cy-radius*0.55,radius*0.15,cx-radius*0.2,cy-radius*0.2,radius*1.2);sa.addColorStop(0,"rgba(130,190,255,0.035)");sa.addColorStop(0.5,"rgba(80,140,255,0.012)");sa.addColorStop(1,"transparent");ctx.beginPath();ctx.arc(cx,cy,radius*1.2,0,Math.PI*2);ctx.fillStyle=sa;ctx.fill();
+
+// ── Aurora borealis ──
+ctx.save();ctx.beginPath();path({type:"Sphere"});ctx.clip();
+for(let pole=0;pole<2;pole++){const lb=pole===0?68:-68;for(let band=0;band<5;band++){const pts=[];for(let i=0;i<=24;i++){const lon=(i/24)*360-180+t*3,lat=lb+Math.sin(i*0.5+t*0.8+band*1.3)*5+band*1.5;const p=proj([lon,lat]);if(p)pts.push(p);}if(pts.length>5){ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length-1;i++){const xc=(pts[i][0]+pts[i+1][0])/2,yc=(pts[i][1]+pts[i+1][1])/2;ctx.quadraticCurveTo(pts[i][0],pts[i][1],xc,yc);}ctx.strokeStyle=`hsla(${pole===0?140+band*15:160+band*20},65%,55%,${0.022-band*0.004})`;ctx.lineWidth=3.5-band*0.5;ctx.lineCap="round";ctx.stroke();}}}ctx.restore();
+
+// ── Ocean with subsurface scattering ──
+ctx.beginPath();path({type:"Sphere"});const oG=ctx.createRadialGradient(cx-radius*0.4,cy-radius*0.38,radius*0.02,cx+radius*0.15,cy+radius*0.15,radius*1.05);
+oG.addColorStop(0,"#1e7292");oG.addColorStop(0.1,"#1a6888");oG.addColorStop(0.3,"#135878");oG.addColorStop(0.55,"#0c4462");oG.addColorStop(0.8,"#07324c");oG.addColorStop(1,"#041e34");ctx.fillStyle=oG;ctx.fill();
+
+// Subsurface scatter — warm light penetrating shallow water on sun side
+ctx.save();ctx.beginPath();path({type:"Sphere"});ctx.clip();
+const ssG=ctx.createRadialGradient(cx-radius*0.35,cy-radius*0.3,0,cx-radius*0.1,cy-radius*0.1,radius*0.6);
+ssG.addColorStop(0,"rgba(40,180,200,0.04)");ssG.addColorStop(0.3,"rgba(30,140,180,0.02)");ssG.addColorStop(1,"transparent");
+ctx.fillStyle=ssG;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+
+// Caustic ripples
+for(let i=0;i<10;i++){const ph=t*0.35+i*0.95;const rx=cx+Math.cos(ph*0.7+i)*radius*0.28,ry=cy+Math.sin(ph*0.5+i*1.3)*radius*0.28;const rg=ctx.createRadialGradient(rx,ry,0,rx,ry,radius*0.1);rg.addColorStop(0,`rgba(100,200,240,${0.012+Math.sin(ph)*0.006})`);rg.addColorStop(1,"transparent");ctx.fillStyle=rg;ctx.beginPath();ctx.arc(rx,ry,radius*0.1,0,Math.PI*2);ctx.fill();}
+ctx.restore();
+
+// ── Graticule ──
+ctx.beginPath();path(d3.geoGraticule().step([15,15])());ctx.strokeStyle="rgba(80,150,200,0.02)";ctx.lineWidth=0.25;ctx.stroke();
+
+// ── Countries ──
+if(worldData?.features){worldData.features.forEach(f=>{
+const name=f.properties?.name||"";const isH=hovered===name;
+const ppl=(records.people?.[name]||[]).length,plc=(records.places?.[name]||[]).length,has=ppl+plc;
+ctx.beginPath();path(f);
+let fill;if(isH)fill="#b5c8a0";else if(has>8)fill="#d4a030";else if(has>4)fill="#c09538";else if(has>0)fill="#a88540";else fill=lc(name);
+ctx.fillStyle=fill;ctx.fill();
+
+// Elevation micro-shading
+const cent=d3.geoCentroid(f),pp=proj(cent);
+if(pp&&!isNaN(pp[0])){ctx.save();ctx.beginPath();path(f);ctx.clip();const eg=ctx.createRadialGradient(pp[0]-4,pp[1]-5,0,pp[0],pp[1],50);eg.addColorStop(0,"rgba(255,255,240,0.035)");eg.addColorStop(0.5,"rgba(255,255,230,0.008)");eg.addColorStop(1,"rgba(0,0,0,0.02)");ctx.fillStyle=eg;ctx.fill();ctx.restore();}
+
+ctx.beginPath();path(f);
+if(isH){ctx.strokeStyle="rgba(255,255,255,0.6)";ctx.lineWidth=1.8;ctx.stroke();ctx.save();ctx.shadowColor="rgba(200,230,180,0.3)";ctx.shadowBlur=10;ctx.stroke();ctx.restore();}else{ctx.strokeStyle=`rgba(180,210,230,${has?0.12:0.06})`;ctx.lineWidth=0.25;ctx.stroke();}
+
+// Coastal glow on logged countries
+if(has>0&&!isH){ctx.beginPath();path(f);ctx.save();ctx.shadowColor=`rgba(212,160,48,${Math.min(0.4,has*0.05)})`;ctx.shadowBlur=8;ctx.strokeStyle=`rgba(212,160,48,${Math.min(0.3,has*0.04)})`;ctx.lineWidth=1.4;ctx.stroke();ctx.restore();}
+});}
+
+// ── Polar ice ──
+ctx.save();ctx.beginPath();path({type:"Sphere"});ctx.clip();
+[76,-76].forEach(lb=>{for(let i=0;i<=36;i++){const lon=(i/36)*360-180,lat=lb+Math.sin(i*0.8+t*0.1)*3;const p=proj([lon,lat]);if(!p)return;const ig=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],radius*0.04);ig.addColorStop(0,"rgba(230,240,255,0.1)");ig.addColorStop(0.6,"rgba(210,225,245,0.04)");ig.addColorStop(1,"transparent");ctx.fillStyle=ig;ctx.beginPath();ctx.arc(p[0],p[1],radius*0.04,0,Math.PI*2);ctx.fill();}});ctx.restore();
+
+// ── City lights (dark side) ──
+ctx.save();ctx.beginPath();path({type:"Sphere"});ctx.clip();
+LIGHTS.forEach(cl=>{const p=proj([cl.lon,cl.lat]);if(!p||isNaN(p[0]))return;const dx=(p[0]-cx)/radius,dy=(p[1]-cy)/radius;const dot=dx*-0.5+dy*-0.45;if(dot>-0.05)return;const dark=Math.min(1,Math.abs(dot+0.05)*2.2);const fl=cl.b+Math.sin(t*cl.fl*60+cl.off)*0.12;ctx.globalAlpha=dark*fl*0.6;const lg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],cl.r*3);lg.addColorStop(0,"rgba(255,228,140,0.8)");lg.addColorStop(0.3,"rgba(255,200,90,0.3)");lg.addColorStop(1,"transparent");ctx.fillStyle=lg;ctx.beginPath();ctx.arc(p[0],p[1],cl.r*3,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;ctx.restore();
+
+// ── Cloud puffs ──
+ctx.save();ctx.beginPath();path({type:"Sphere"});ctx.clip();
+CLOUDS.forEach(cc=>{const blon=cc.lon+t*cc.speed*40;cc.puffs.forEach(pf=>{const p=proj([blon+pf.dlon,cc.lat+pf.dlat]);if(!p||isNaN(p[0]))return;const pr=radius*pf.r;
+// Shadow
+ctx.fillStyle=`rgba(0,0,20,${pf.op*0.25})`;ctx.beginPath();ctx.arc(p[0]+1.5,p[1]+1.5,pr*1.2,0,Math.PI*2);ctx.fill();
+// Body with sun highlight
+const cg=ctx.createRadialGradient(p[0]-pr*0.25,p[1]-pr*0.25,0,p[0],p[1],pr);cg.addColorStop(0,`rgba(255,255,255,${pf.op*1.2})`);cg.addColorStop(0.5,`rgba(240,245,255,${pf.op*0.6})`);cg.addColorStop(1,"transparent");ctx.fillStyle=cg;ctx.beginPath();ctx.arc(p[0],p[1],pr,0,Math.PI*2);ctx.fill();});});
+ctx.restore();
+
+// ── Sun lighting + terminator ──
+ctx.beginPath();path({type:"Sphere"});
+const sG=ctx.createRadialGradient(cx-radius*0.5,cy-radius*0.45,radius*0.02,cx+radius*0.25,cy+radius*0.25,radius*1.2);
+sG.addColorStop(0,"rgba(255,252,235,0.09)");sG.addColorStop(0.12,"rgba(255,248,225,0.04)");sG.addColorStop(0.38,"rgba(0,0,0,0)");sG.addColorStop(0.6,"rgba(0,0,15,0.1)");sG.addColorStop(0.78,"rgba(0,0,12,0.25)");sG.addColorStop(0.92,"rgba(0,0,10,0.42)");sG.addColorStop(1,"rgba(0,0,8,0.55)");ctx.fillStyle=sG;ctx.fill();
+
+// Terminator sunset line — orange/pink atmospheric refraction
+ctx.beginPath();path({type:"Sphere"});
+const tG=ctx.createLinearGradient(cx-radius*0.6,cy-radius*0.5,cx+radius*0.6,cy+radius*0.5);
+tG.addColorStop(0,"transparent");tG.addColorStop(0.38,"transparent");
+tG.addColorStop(0.44,"rgba(220,130,60,0.02)");
+tG.addColorStop(0.48,"rgba(240,120,80,0.025)");
+tG.addColorStop(0.52,"rgba(220,90,70,0.02)");
+tG.addColorStop(0.56,"rgba(180,80,100,0.015)");
+tG.addColorStop(0.62,"transparent");tG.addColorStop(1,"transparent");
+ctx.fillStyle=tG;ctx.fill();
+
+// ── Specular highlight ──
+const spX=cx-radius*0.33,spY=cy-radius*0.31;const spG=ctx.createRadialGradient(spX,spY,0,spX,spY,radius*0.25);spG.addColorStop(0,"rgba(255,255,255,0.055)");spG.addColorStop(0.4,"rgba(255,255,255,0.018)");spG.addColorStop(1,"transparent");ctx.beginPath();ctx.arc(spX,spY,radius*0.25,0,Math.PI*2);ctx.fillStyle=spG;ctx.fill();
+
+// ── Fresnel rim with chromatic aberration ──
+ctx.beginPath();path({type:"Sphere"});
+const fr=ctx.createRadialGradient(cx,cy,radius*0.82,cx,cy,radius*1.01);
+fr.addColorStop(0,"transparent");fr.addColorStop(0.7,"transparent");
+fr.addColorStop(0.88,"rgba(60,120,240,0.03)");
+fr.addColorStop(0.95,"rgba(80,160,255,0.06)");
+fr.addColorStop(1,"rgba(100,180,255,0.09)");
+ctx.fillStyle=fr;ctx.fill();
+// Red fringe (chromatic)
+ctx.beginPath();path({type:"Sphere"});
+const fr2=ctx.createRadialGradient(cx,cy,radius*0.96,cx,cy,radius*1.02);
+fr2.addColorStop(0,"transparent");
+fr2.addColorStop(0.5,"rgba(255,100,80,0.012)");
+fr2.addColorStop(1,"rgba(255,80,60,0.025)");
+ctx.fillStyle=fr2;ctx.fill();
+// Rim stroke
+ctx.beginPath();path({type:"Sphere"});ctx.strokeStyle="rgba(75,155,255,0.08)";ctx.lineWidth=1.5;ctx.stroke();
+
+// ── Lens flare ──
+const fx0=cx-radius*1.15,fy0=cy-radius*0.95;for(let i=0;i<4;i++){const fd=0.3+i*0.22;const fx=fx0+(cx-fx0)*fd*2,fy=fy0+(cy-fy0)*fd*2,fR=(4-i)*radius*0.03+Math.sin(t*0.5+i)*2;const fg=ctx.createRadialGradient(fx,fy,0,fx,fy,fR);fg.addColorStop(0,`rgba(180,210,255,${0.035-i*0.007})`);fg.addColorStop(1,"transparent");ctx.fillStyle=fg;ctx.beginPath();ctx.arc(fx,fy,fR,0,Math.PI*2);ctx.fill();}
+
+// ── Vignette ──
+const vig=ctx.createRadialGradient(cx,cy,Math.min(w,h)*0.25,cx,cy,Math.max(w,h)*0.75);
+vig.addColorStop(0,"transparent");vig.addColorStop(0.7,"transparent");
+vig.addColorStop(1,"rgba(0,0,0,0.35)");
+ctx.fillStyle=vig;ctx.fillRect(0,0,w,h);
+
+// ── Film grain (every 3rd frame for perf) ──
+if(frame%3===0){ctx.globalAlpha=0.4;const pat=ctx.createPattern(grainC,"repeat");ctx.fillStyle=pat;ctx.fillRect(0,0,w,h);ctx.globalAlpha=1;}
+
+})(0);
+}
+
+// ═══════════════════ GATE ANIMATIONS ═══════════════════
+function startGateAnimations(){
+  // ── Fireworks ──
+  const fwC=$("FIREWORKS"),fwCtx=fwC.getContext("2d");
+  const cfC=$("CONFETTI"),cfCtx=cfC.getContext("2d");
+  function resizeGate(){fwC.width=cfC.width=innerWidth;fwC.height=cfC.height=innerHeight;}
+  resizeGate();addEventListener("resize",resizeGate);
+
+  const rockets=[],particles=[],confetti=[];
+  const argColors=["#75AADB","#FFFFFF","#FFD700","#FFA500","#75AADB","#fff","#87CEEB"];
+
+  function launchRocket(){
+    rockets.push({x:Math.random()*innerWidth,y:innerHeight,vx:(Math.random()-0.5)*3,vy:-(Math.random()*6+8),life:0,maxLife:40+Math.random()*25,color:argColors[Math.floor(Math.random()*argColors.length)]});
+  }
+
+  function explode(x,y,color){
+    const count=40+Math.floor(Math.random()*30);
+    for(let i=0;i<count;i++){
+      const angle=Math.random()*Math.PI*2,speed=Math.random()*5+2;
+      particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:0,maxLife:50+Math.random()*40,color:Math.random()>0.3?color:argColors[Math.floor(Math.random()*argColors.length)],r:Math.random()*2.5+1});
+    }
+  }
+
+  // ── Confetti ──
+  for(let i=0;i<80;i++){
+    confetti.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight-innerHeight,w:Math.random()*8+4,h:Math.random()*4+2,color:argColors[Math.floor(Math.random()*argColors.length)],vy:Math.random()*2+1,vx:(Math.random()-0.5)*1.5,rot:Math.random()*360,rotSpeed:Math.random()*8-4,wobble:Math.random()*Math.PI*2});
+  }
+
+  // ── Floating emojis ──
+  const emojiPool=["🧉","⚽","🥩","🇦🇷","☀️","🎵","💃","🏆","🫕","🌟","🎆"];
+  const gate=$("GATE");
+  function spawnEmoji(){
+    if(!gate||gate.classList.contains("gone"))return;
+    const el=document.createElement("div");
+    el.className="gate-float";
+    el.textContent=emojiPool[Math.floor(Math.random()*emojiPool.length)];
+    el.style.left=Math.random()*90+5+"%";
+    el.style.bottom="-40px";
+    el.style.fontSize=(Math.random()*20+20)+"px";
+    el.style.animationDuration=(Math.random()*3+3)+"s";
+    el.style.animationDelay=Math.random()*0.5+"s";
+    gate.appendChild(el);
+    setTimeout(()=>el.remove(),7000);
+  }
+  const emojiInterval=setInterval(spawnEmoji,300);
+
+  let fwTimer=0;
+  function animateGate(){
+    if(!gate||gate.style.display==="none"){clearInterval(emojiInterval);return;}
+    requestAnimationFrame(animateGate);
+    fwTimer++;
+
+    // Launch rockets periodically
+    if(fwTimer%35===0)launchRocket();
+    if(fwTimer%50===0)launchRocket();
+
+    // Fireworks canvas
+    fwCtx.clearRect(0,0,fwC.width,fwC.height);
+
+    // Update rockets
+    for(let i=rockets.length-1;i>=0;i--){
+      const r=rockets[i];r.x+=r.vx;r.y+=r.vy;r.vy+=0.15;r.life++;
+      // Trail
+      fwCtx.globalAlpha=0.6;fwCtx.fillStyle=r.color;fwCtx.beginPath();fwCtx.arc(r.x,r.y,2,0,Math.PI*2);fwCtx.fill();
+      fwCtx.globalAlpha=0.2;const tg=fwCtx.createRadialGradient(r.x,r.y,0,r.x,r.y,8);tg.addColorStop(0,r.color);tg.addColorStop(1,"transparent");fwCtx.fillStyle=tg;fwCtx.beginPath();fwCtx.arc(r.x,r.y,8,0,Math.PI*2);fwCtx.fill();
+      if(r.life>r.maxLife||r.vy>-1){explode(r.x,r.y,r.color);rockets.splice(i,1);}
+    }
+
+    // Update particles
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vx*=0.98;p.vy*=0.98;p.vy+=0.06;p.life++;
+      const al=1-p.life/p.maxLife;
+      fwCtx.globalAlpha=al;fwCtx.fillStyle=p.color;fwCtx.beginPath();fwCtx.arc(p.x,p.y,p.r*al,0,Math.PI*2);fwCtx.fill();
+      // Glow
+      fwCtx.globalAlpha=al*0.3;const pg=fwCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);pg.addColorStop(0,p.color);pg.addColorStop(1,"transparent");fwCtx.fillStyle=pg;fwCtx.beginPath();fwCtx.arc(p.x,p.y,p.r*4,0,Math.PI*2);fwCtx.fill();
+      if(p.life>p.maxLife)particles.splice(i,1);
+    }
+    fwCtx.globalAlpha=1;
+
+    // Confetti canvas
+    cfCtx.clearRect(0,0,cfC.width,cfC.height);
+    confetti.forEach(c=>{
+      c.y+=c.vy;c.x+=c.vx+Math.sin(c.wobble+=0.03)*0.5;c.rot+=c.rotSpeed;
+      if(c.y>cfC.height+20){c.y=-20;c.x=Math.random()*cfC.width;}
+      cfCtx.save();cfCtx.translate(c.x,c.y);cfCtx.rotate(c.rot*Math.PI/180);
+      cfCtx.globalAlpha=0.7;cfCtx.fillStyle=c.color;cfCtx.fillRect(-c.w/2,-c.h/2,c.w,c.h);
+      cfCtx.restore();
+    });
+  }
+  animateGate();
+}
+
+// ═══════════════════ GATE ═══════════════════
+function checkGate(){
+  try{if(sessionStorage.getItem("atlas-auth")==="1"){$("GATE").style.display="none";bootApp();return;}}catch(e){}
+  startGateAnimations();
+  const pin=$("GPIN"),btn=$("GBTN"),err=$("GERR");
+  function tryCode(){
+    const v=pin.value.trim().toLowerCase();
+    if(!v){err.textContent="Dale, escribí algo...";return;}
+    if(v===GATE_CODE.toLowerCase()){
+      try{sessionStorage.setItem("atlas-auth","1");}catch(e){}
+      err.textContent="";
+      $("GATE").classList.add("gone");
+      setTimeout(()=>{$("GATE").style.display="none";bootApp();},1000);
+    }else{
+      err.textContent="No, boludo. Esa no es.";
+      pin.style.animation="gateShake 0.5s ease";
+      pin.style.borderColor="rgba(255,100,100,0.5)";
+      setTimeout(()=>{pin.style.animation="";pin.style.borderColor="";},600);
+    }
+  }
+  btn.onclick=tryCode;
+  pin.onkeydown=e=>{if(e.key==="Enter")tryCode();};
+  pin.focus();
+}
+
+// ═══════════════════ INIT ═══════════════════
+async function bootApp(){
+  $("LS").style.display="flex";
+  resize();
+  usingSupa=initSupabase();
+  if(usingSupa){
+    const ok=await loadFromSupabase();
+    if(ok){subscribeRealtime();}else{usingSupa=false;await loadLocal();$("sync").className="off";$("sync-label").textContent="local only";}
+  }else{await loadLocal();$("sync").className="";$("sync-label").textContent="local";}
+  rS();
+  fetch(GEO).then(r=>r.json()).then(data=>{worldData=data;$("LS").classList.add("h");startR();}).catch(()=>$("LS").classList.add("h"));
+}
+
+checkGate();
+</script>
+</body>
+</html>
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
